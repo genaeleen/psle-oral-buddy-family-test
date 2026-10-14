@@ -17,6 +17,7 @@
 <script src="/practice-content.js"></script><script type="module">
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
 const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let client=null;let studentSession=null;
 $('status').textContent='Checking connection…';
 async function initialize(){
@@ -70,7 +71,6 @@ $('oralHistory').onclick=oralLoadHistory;
 void initialize();
 const params=new URLSearchParams(location.search);$('redeemPanel').hidden=!params.has('invite');
 
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function parentToken(){const {data:{session}}=await client.auth.getSession();if(!session)throw Error('Please sign in as parent first');return session.access_token}
 async function parentRequest(path,method='GET',body){const token=await parentToken();const res=await fetch('/.netlify/functions/'+path,{method,headers:{authorization:'Bearer '+token,...(body?{'content-type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});const data=await res.json();if(!res.ok)throw Error(data.error||'Request failed');return data}
 $('createStudent').onclick=async()=>{const btn=$('createStudent');btn.disabled=true;$('createStatus').textContent='Creating student…';try{const data=await parentRequest('create-student','POST',{display_name:$('studentName').value,username:$('studentUsername').value,password:$('studentPassword').value});$('createStatus').textContent='Created '+data.student.display_name;$('studentPassword').value='';$('loadFamily').click()}catch(e){$('createStatus').textContent=e.message}finally{btn.disabled=false}};
