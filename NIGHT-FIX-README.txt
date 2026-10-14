@@ -1,0 +1,1 @@
+SG Oral Buddy night fix: session restoration, persistent AI review button, better AI review response handling, and marking result preserved during history refresh. Upload all files preserving paths. No SQL changes. This is a code-checked interim update, not a live-tested release or a reviewed 225-answer release.
