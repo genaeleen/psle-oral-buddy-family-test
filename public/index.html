@@ -1,0 +1,32 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PSLE Oral Buddy — Family Test</title>
+<style>body{font-family:system-ui,sans-serif;background:#f4f7fc;color:#192b44;margin:0;padding:28px}main{max-width:600px;margin:auto}section{background:white;padding:24px;border-radius:16px;margin:18px 0;box-shadow:0 3px 16px #1b35531a}h1{color:#1553a0}label{display:block;margin:12px 0 5px}input{width:100%;box-sizing:border-box;padding:11px;border:1px solid #a6b6ce;border-radius:8px;font:inherit}button{margin-top:16px;padding:12px 18px;background:#1766b5;color:white;border:0;border-radius:8px;cursor:pointer}button:disabled{opacity:.6}pre{white-space:pre-wrap;overflow-wrap:anywhere}small{color:#536780}#notice{background:#fff3d5;padding:12px;border-radius:8px}</style>
+<main><h1>PSLE Oral Buddy — Family Test</h1><p id="notice">This is a separate invitation and account test site. The live practice website is not changed.</p>
+<section><h2>Parent sign in</h2><label>Email<input id="loginEmail" type="email" autocomplete="email"></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password"></label><button id="login">Sign in</button> <button id="logout" type="button">Sign out</button><p id="loginStatus"></p></section>
+<section id="adminPanel" hidden><h2>Administrator: Invite a parent</h2><label>Parent email<input id="inviteEmail" type="email"></label><button id="invite">Generate 48-hour invitation link</button><p id="inviteStatus"></p><textarea id="inviteLink" style="width:100%;min-height:85px" readonly aria-label="Invitation link"></textarea><p><small>Copy this link and share it privately. It grants access to the specified email only.</small></p></section>
+<section id="redeemPanel" hidden><h2>Accept parent invitation</h2><p>Enter the exact email address that received the invitation.</p><label>Invited email<input id="redeemEmail" type="email" autocomplete="email"></label><label>Family display name<input id="familyName" maxlength="120"></label><label>Create password (at least 12 characters)<input id="redeemPassword" type="password" autocomplete="new-password"></label><button id="redeem">Create parent account</button><p id="redeemStatus"></p></section>
+<section><h2>Testing status</h2><p id="status">Loading…</p><small>This test only handles parent authentication and invitations. Student profiles and practice history syncing will follow.</small></section></main>
+<script type="module">
+import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
+const $=id=>document.getElementById(id);
+let client=null;
+$('status').textContent='Checking connection…';
+async function initialize(){
+ try{
+  const res=await fetch('/.netlify/functions/public-config',{cache:'no-store'});
+  if(!res.ok)throw new Error('Configuration service returned HTTP '+res.status+'. Check Netlify Functions deployment.');
+  const config=await res.json();
+  if(!config.url||!config.publishableKey)throw new Error(config.error||'Supabase configuration missing on server.');
+  client=createClient(config.url,config.publishableKey);
+  $('status').textContent='Supabase connection configured. You can sign in.';
+  client.auth.onAuthStateChange(()=>{void refresh()});
+  await refresh();
+ }catch(e){$('status').textContent='Connection error: '+e.message; $('loginStatus').textContent='Sign-in unavailable until the connection is fixed.';}
+}
+async function refresh(){if(!client)return;try{const {data:{session},error}=await client.auth.getSession();if(error)throw error;$('loginStatus').textContent=session?.user?.email?'Signed in: '+session.user.email:'Not signed in';$('adminPanel').hidden=!session;}catch(e){$('loginStatus').textContent='Session error: '+e.message}}
+$('login').onclick=async()=>{if(!client){$('loginStatus').textContent='Not connected. See Testing status below.';return;}const btn=$('login');btn.disabled=true;$('loginStatus').textContent='Signing in…';try{const {error}=await client.auth.signInWithPassword({email:$('loginEmail').value.trim(),password:$('loginPassword').value});if(error)throw error;await refresh();}catch(e){$('loginStatus').textContent='Sign-in failed: '+e.message}finally{btn.disabled=false}};
+$('logout').onclick=async()=>{if(!client)return;try{await client.auth.signOut();await refresh()}catch(e){$('loginStatus').textContent=e.message}};
+$('invite').onclick=async()=>{try{const {data:{session}}=await client.auth.getSession();if(!session){$('inviteStatus').textContent='Sign in first';return;}const res=await fetch('/.netlify/functions/invite-parent',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+session.access_token},body:JSON.stringify({email:$('inviteEmail').value})});const data=await res.json();$('inviteStatus').textContent=data.error||('Link expires: '+data.expires_at);$('inviteLink').value=data.url||'';}catch(e){$('inviteStatus').textContent='Invitation error: '+e.message}};
+$('redeem').onclick=async()=>{try{const res=await fetch('/.netlify/functions/redeem-invite',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token:params.get('invite'),email:$('redeemEmail').value,family_name:$('familyName').value,password:$('redeemPassword').value})});const data=await res.json();$('redeemStatus').textContent=data.error||data.message||'Done';if(data.ok){history.replaceState({},'',location.pathname);$('redeemPanel').hidden=true;}}catch(e){$('redeemStatus').textContent='Registration error: '+e.message}};
+void initialize();
+const params=new URLSearchParams(location.search);$('redeemPanel').hidden=!params.has('invite');
+</script></html>
