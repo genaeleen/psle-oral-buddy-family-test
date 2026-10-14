@@ -47,7 +47,7 @@ const oralEsc=esc;
 let oralAttempts=[];
 const questionKey=(theme,q)=>theme+'|'+q;
 function questionAttempts(theme,q){return oralAttempts.filter(a=>a.theme_id===theme&&a.question_id===q)}
-function attemptHtml(a){return '<details><summary>'+esc(new Date(a.created_at).toLocaleString())+' · '+esc(a.status)+' · '+(a.score===null||a.score===undefined?'Not scored':esc(a.score)+'/100')+'</summary><p><b>Original answer</b></p><p style="white-space:pre-wrap">'+esc(a.answer_text)+'</p>'+(a.corrected_text?'<p><b>AI-improved complete model answer</b></p><p style="white-space:pre-wrap">'+esc(a.corrected_text)+'</p>':'')+(a.feedback?'<p><b>AI feedback</b></p><pre>'+esc(JSON.stringify(a.feedback,null,2))+'</pre>':'')+'</details>'}
+function attemptHtml(a){return '<details><summary>'+esc(new Date(a.created_at).toLocaleString())+' · '+esc(a.status)+' · '+(a.score===null||a.score===undefined?'Not scored':esc(a.score)+'/100')+'</summary><p><b>Original answer</b></p><p style="white-space:pre-wrap">'+esc(a.answer_text)+'</p>'+(a.corrected_text?'<p><b>AI-improved complete model answer</b></p><p style="white-space:pre-wrap">'+esc(a.corrected_text)+'</p><details><summary>🔴🟢 View tracked changes (original vs model)</summary><p><small>Red shows original words removed; green shows suggested additions. New model-answer sections are examples, not words the student actually said.</small></p>'+renderMarking(a.answer_text,a.corrected_text)+'</details>':'')+(a.feedback?'<p><b>AI feedback</b></p><pre>'+esc(JSON.stringify(a.feedback,null,2))+'</pre>':'')+'</details>'}
 function oralRefreshIndicators(){
  const current=oralTheme.value;const counts=library.scenarios.map(sc=>oralAttempts.filter(a=>a.theme_id===sc.topic).length);
  const attempted=counts.filter(Boolean).length;
@@ -105,7 +105,7 @@ function renderMarking(original,corrected){
 $('oralMark').onclick=async()=>{
  const btn=$('oralMark');btn.disabled=true;$('oralMarkStatus').textContent='Sending answer for AI marking…';$('oralMarkResult').innerHTML='';
  try{const sc=oralSelected(),q=Number(oralQuestion.value),answer=$('oralAnswer').value.trim();
- const d=await studentRequest('mark-answer','POST',{theme_id:sc.topic,question_id:'Q'+(q+1),stimulus_id:'photo-'+sc.photo,question_text:sc.questions[q].question,answer_text:answer,bright_ideas:sc.questions[q].ideas||[]});
+ const d=await studentRequest('mark-answer','POST',{theme_id:sc.topic,question_id:'Q'+(q+1),stimulus_id:'photo-'+sc.photo,question_text:sc.questions[q].question,answer_text:answer,bright_ideas:sc.questions[q].ideas||[],scene_description:sc.scene||'',photo_data:q===0?(library.photos[String(sc.photo)]||''):null});
  const f=d.feedback;
  $('oralMarkStatus').textContent='Marked and saved to cloud. '+(d.remaining_today===null?'AI marking: unlimited (API charges apply).':'Remaining today: '+d.remaining_today);
  $('oralMarkResult').innerHTML='<h4>Practice score: '+esc(d.score)+'/100</h4><p><small>'+esc(f.rubric)+'</small></p><p><b>Strengths:</b> '+(f.strengths||[]).map(esc).join(' · ')+'</p><p><b>To improve:</b> '+(f.improvements||[]).map(esc).join(' · ')+'</p><p>'+esc(f.explanation)+'</p>'+renderMarking(answer,d.corrected_text);
