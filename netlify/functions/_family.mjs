@@ -1,0 +1,5 @@
+import {admin,publicClient,json,configured,sameOrigin,parse} from './_shared.mjs';
+export async function actor(event){const bearer=event.headers?.authorization||event.headers?.Authorization||'';const jwt=/^Bearer (.+)$/i.exec(bearer)?.[1];if(!jwt)return null;const {data:{user},error}=await publicClient().auth.getUser(jwt);return error?null:user;}
+export async function parentFamily(userId){const {data,error}=await admin().from('family_members').select('family_id').eq('user_id',userId).eq('role','parent').limit(2);if(error||!data||data.length!==1)return null;return data[0].family_id;}
+export async function studentForUser(userId){const {data,error}=await admin().from('student_auth').select('student_id,students(id,family_id,display_name,username)').eq('auth_user_id',userId).maybeSingle();return error?null:data;}
+export function reject(event){if(event.httpMethod!=='POST')return json(405,{error:'Method not allowed'});if(!configured())return json(503,{error:'Server not configured'});if(!sameOrigin(event))return json(403,{error:'Origin not allowed'});return null;}
