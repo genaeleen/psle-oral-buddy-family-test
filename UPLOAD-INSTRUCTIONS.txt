@@ -1,0 +1,11 @@
+SG Oral Buddy - complete interim website repository package
+
+This is the PUBLIC-BROWSING INTERIM version, not the final classroom-reviewed 225-answer release.
+
+1. Extract the ZIP.
+2. Upload the contents (not the containing folder) to the ROOT of the Family Edition GitHub repository, preserving public/, netlify/functions/, and sql/ folders.
+3. Commit and wait for Netlify to publish.
+4. In Supabase SQL Editor, run sql/05_parent_access_requests.sql once if not already run.
+5. Test visitor browsing, sign-in, model-answer access, AI marking, parent request/approval, attempt counts and history. These were NOT live-tested.
+
+Never upload your private student history backup, Supabase secret key, or OpenAI API key.
