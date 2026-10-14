@@ -1,0 +1,162 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PSLE Oral Buddy — Family Edition</title>
+<style>body{font-family:system-ui,sans-serif;background:#f4f7fc;color:#192b44;margin:0;padding:28px}main{max-width:850px;margin:auto}section{background:white;padding:24px;border-radius:16px;margin:18px 0;box-shadow:0 3px 16px #1b35531a}h1{color:#1553a0}label{display:block;margin:12px 0 5px}input{width:100%;box-sizing:border-box;padding:11px;border:1px solid #a6b6ce;border-radius:8px;font:inherit}button{margin-top:16px;padding:12px 18px;background:#1766b5;color:white;border:0;border-radius:8px;cursor:pointer}button:disabled{opacity:.6}pre{white-space:pre-wrap;overflow-wrap:anywhere}small{color:#536780}#notice{background:#fff3d5;padding:12px;border-radius:8px}</style><style>#oralLibrary{margin-top:20px;border:2px solid #b7dbe6;border-radius:14px;padding:16px;background:#f5fbfd}#oralLibrary img{width:100%;max-height:360px;object-fit:contain;border-radius:12px;background:#eef3f7}#oralLibrary select,#oralLibrary textarea{width:100%;box-sizing:border-box;margin:8px 0;padding:10px;font:inherit}#oralLibrary textarea{min-height:200px}#oralLibrary .helper{background:#fff8e6;padding:12px;border-radius:10px;margin:12px 0}#oralLibrary details{margin:8px 0}#oralLibrary .row{display:flex;gap:12px;flex-wrap:wrap}#oralLibrary .row>*{flex:1;min-width:200px}</style>
+<main><h1>PSLE Oral Buddy — Family Edition</h1><p id="notice">Private family oral practice. Your original website remains separate.</p>
+<section><h2>Parent sign in</h2><label>Email<input id="loginEmail" type="email" autocomplete="email"></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password"></label><button id="login">Sign in</button> <button id="logout" type="button">Sign out</button><p id="loginStatus"></p></section>
+<section id="adminPanel" hidden><h2>Administrator: Invite a parent</h2><label>Parent email<input id="inviteEmail" type="email"></label><button id="invite">Generate 48-hour invitation link</button><p id="inviteStatus"></p><textarea id="inviteLink" style="width:100%;min-height:85px" readonly aria-label="Invitation link"></textarea><p><small>Copy this link and share it privately. It grants access to the specified email only.</small></p></section>
+<section id="redeemPanel" hidden><h2>Accept parent invitation</h2><p>Enter the exact email address that received the invitation.</p><label>Invited email<input id="redeemEmail" type="email" autocomplete="email"></label><label>Family display name<input id="familyName" maxlength="120"></label><label>Create password (at least 12 characters)<input id="redeemPassword" type="password" autocomplete="new-password"></label><button id="redeem">Create parent account</button><p id="redeemStatus"></p></section>
+
+<section id="familyPanel" hidden><h2>My family — Student accounts</h2><p><small>Only parents with an activated family can create students. Your platform administrator login alone may not yet belong to a family.</small></p>
+<label>Student display name<input id="studentName" maxlength="80" placeholder="e.g. Practice Test"></label>
+<label>Username<input id="studentUsername" maxlength="32" placeholder="e.g. practice_test_01"></label>
+<label>Student password (12+ characters)<input id="studentPassword" type="password" autocomplete="new-password"></label>
+<button id="createStudent">Create student</button><p id="createStatus" role="status"></p>
+<h3>Student password reset</h3><p>Only parents can change a student password. Practice history is preserved.</p><label>Student<select id="resetStudent"></select></label><label>New password (12+ characters)<input id="resetPassword" type="password" autocomplete="new-password"></label><button id="resetStudentBtn">Reset selected student password</button><p id="resetStatus" role="status"></p>
+<h3>Import existing practice history</h3><p>Keep your original JSON backup safe. Imported historical scores are labelled unverified.</p><label>Import for student<select id="importStudent"></select></label><input type="file" id="importFile" accept=".json,application/json"><button id="importHistoryBtn">Import backup</button><p id="importStatus" role="status"></p>
+<h3>AI usage controls</h3><p>Unlimited removes the website daily marking cap, but OpenAI API charges still apply.</p><label>Student<select id="aiSettingStudent"></select></label><label>Daily AI marking allowance<select id="aiSettingLimit"><option value="unlimited">Unlimited</option><option value="5">5 per day</option><option value="10">10 per day</option><option value="20">20 per day</option><option value="50">50 per day</option></select></label><button id="saveAiSetting">Save AI allowance</button><p id="aiSettingStatus" role="status"></p><h3>Parent Review</h3><button id="loadFamily">Refresh family progress</button><p id="familyStatus" role="status"></p><div id="familyResults"></div></section>
+<section><h2>Student sign in (test)</h2><label>Student username<input id="studentLoginName" autocomplete="username"></label><label>Password<input id="studentLoginPassword" type="password" autocomplete="current-password"></label><button id="studentLogin">Sign in as student</button><button id="studentLogout">Student sign out</button><p id="studentStatus" role="status"></p>
+<div id="studentPractice" hidden><div id="oralLibrary"><h3>📷 Oral Practice Library — Cloud Drafts</h3><p>Select a theme and question. Your answer will be saved to your student account and visible in Parent Review.</p><label style="display:flex;align-items:center;gap:8px"><input id="untriedFirst" type="checkbox" style="width:auto">Show untried themes first</label><p id="oralProgress"></p><div class="row"><label>Theme<select id="oralTheme"></select></label><label>Question<select id="oralQuestion"></select></label></div><p id="questionProgress"></p><div id="questionPrevious"></div><p id="oralScene"></p><img id="oralPhoto" alt="Oral practice picture stimulus"><h4 id="oralPrompt"></h4><details><summary>💡 Bright Ideas and examples</summary><div id="oralIdeas" class="helper"></div></details><details><summary>📚 Vocabulary and model answer</summary><div id="oralVocab" class="helper"></div><div id="oralModel" class="helper"></div></details><label for="oralAnswer">My answer</label><textarea id="oralAnswer" placeholder="Write your answer here. Explain your ideas and give personal examples."></textarea><p><button id="oralMicStart" type="button">🎙️ Start speaking</button> <button id="oralMicStop" type="button" disabled>Stop microphone</button> <span id="oralMicStatus" role="status" aria-live="polite">Microphone not started</span></p><p><button id="oralSave" type="button">Save answer to cloud</button> <button id="oralHistory" type="button">Refresh my cloud history</button></p><p id="oralStatus" role="status"></p><div class="helper" style="margin:14px 0;padding:12px;border:1px solid #d8e6ed;border-radius:12px"><h4>🤖 AI practice marking</h4><p><small>Unofficial text-only feedback, not an official PSLE mark. Daily marking allowance is controlled by your parent; unlimited marking still incurs OpenAI API costs. AI marking uses OpenAI; do not include private information.</small></p><button id="oralMark" type="button">Mark my answer with AI</button><p id="oralMarkStatus" role="status"></p><div id="oralMarkResult"></div></div><div id="oralRecent"></div><small>Review microphone transcripts before marking. Speech recognition may use your browser provider’s service.</small></div><div id="legacyPractice" hidden><h3>Save a practice draft</h3><p><small>This is a test form, not yet the full oral practice library or AI marker.</small></p><label>Theme ID<input id="themeId" value="test-theme"></label><label>Question ID<input id="questionId" value="test-question-1"></label><label>Answer<textarea id="answerText" rows="5" style="width:100%;box-sizing:border-box"></textarea></label><button id="saveAttempt">Save draft to cloud</button><button id="loadStudent">My practice history</button><p id="attemptStatus" role="status"></p><div id="studentResults"></div></div></div></section>
+<section><h2>Testing status</h2><p id="status">Loading…</p><small>Family Edition cloud practice. Use Chrome for browser microphone transcription.</small></section></main>
+<script src="/practice-content.js"></script><script type="module">
+import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let client=null;let studentSession=null;
+$('status').textContent='Checking connection…';
+async function initialize(){
+ try{
+  const res=await fetch('/.netlify/functions/public-config',{cache:'no-store'});
+  if(!res.ok)throw new Error('Configuration service returned HTTP '+res.status+'. Check Netlify Functions deployment.');
+  const config=await res.json();
+  if(!config.url||!config.publishableKey)throw new Error(config.error||'Supabase configuration missing on server.');
+  client=createClient(config.url,config.publishableKey);
+  $('status').textContent='Supabase connection configured. You can sign in.';
+  client.auth.onAuthStateChange(()=>{void refresh()});
+  await refresh();
+ }catch(e){$('status').textContent='Connection error: '+e.message; $('loginStatus').textContent='Sign-in unavailable until the connection is fixed.';}
+}
+async function refresh(){if(!client)return;try{const {data:{session},error}=await client.auth.getSession();if(error)throw error;$('loginStatus').textContent=session?.user?.email?'Signed in: '+session.user.email:'Not signed in';$('adminPanel').hidden=!session;$('familyPanel').hidden=!session;}catch(e){$('loginStatus').textContent='Session error: '+e.message}}
+$('login').onclick=async()=>{if(!client){$('loginStatus').textContent='Not connected. See Testing status below.';return;}const btn=$('login');btn.disabled=true;$('loginStatus').textContent='Signing in…';try{const {error}=await client.auth.signInWithPassword({email:$('loginEmail').value.trim(),password:$('loginPassword').value});if(error)throw error;await refresh();}catch(e){$('loginStatus').textContent='Sign-in failed: '+e.message}finally{btn.disabled=false}};
+$('logout').onclick=async()=>{if(!client)return;try{await client.auth.signOut();await refresh()}catch(e){$('loginStatus').textContent=e.message}};
+$('invite').onclick=async()=>{try{const {data:{session}}=await client.auth.getSession();if(!session){$('inviteStatus').textContent='Sign in first';return;}const res=await fetch('/.netlify/functions/invite-parent',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+session.access_token},body:JSON.stringify({email:$('inviteEmail').value})});const data=await res.json();$('inviteStatus').textContent=data.error||('Link expires: '+data.expires_at);$('inviteLink').value=data.url||'';}catch(e){$('inviteStatus').textContent='Invitation error: '+e.message}};
+$('redeem').onclick=async()=>{try{const res=await fetch('/.netlify/functions/redeem-invite',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token:params.get('invite'),email:$('redeemEmail').value,family_name:$('familyName').value,password:$('redeemPassword').value})});const data=await res.json();$('redeemStatus').textContent=data.error||data.message||'Done';if(data.ok){history.replaceState({},'',location.pathname);$('redeemPanel').hidden=true;}}catch(e){$('redeemStatus').textContent='Registration error: '+e.message}};
+
+// Full source-content practice library; student login and existing cloud endpoints retained.
+const library=window.PSLE_LIBRARY;
+const oralTheme=$('oralTheme'),oralQuestion=$('oralQuestion');
+const oralEsc=esc;
+let oralAttempts=[];
+const questionKey=(theme,q)=>theme+'|'+q;
+function questionAttempts(theme,q){return oralAttempts.filter(a=>a.theme_id===theme&&a.question_id===q)}
+function attemptHtml(a){return '<details><summary>'+esc(new Date(a.created_at).toLocaleString())+' · '+esc(a.status)+' · '+(a.score===null||a.score===undefined?'Not scored':esc(a.score)+'/100')+'</summary><p><b>Original answer</b></p><p style="white-space:pre-wrap">'+esc(a.answer_text)+'</p>'+(a.corrected_text?'<p><b>AI-improved complete model answer</b></p><p style="white-space:pre-wrap">'+esc(a.corrected_text)+'</p><details><summary>🔴🟢 View tracked changes (original vs model)</summary><p><small>Red shows original words removed; green shows suggested additions. New model-answer sections are examples, not words the student actually said.</small></p>'+renderMarking(a.answer_text,a.corrected_text)+'</details>':'')+(a.feedback?'<p><b>AI feedback</b></p><pre>'+esc(JSON.stringify(a.feedback,null,2))+'</pre>':'')+'</details>'}
+function oralRefreshIndicators(){
+ const current=oralTheme.value;const counts=library.scenarios.map(sc=>oralAttempts.filter(a=>a.theme_id===sc.topic).length);
+ const attempted=counts.filter(Boolean).length;
+ $('oralProgress').textContent='Themes practised: '+attempted+'/'+library.scenarios.length+' · Not yet tried: '+(library.scenarios.length-attempted);
+ const order=library.scenarios.map((sc,i)=>i);
+ if($('untriedFirst').checked)order.sort((a,b)=>(counts[a]>0)-(counts[b]>0)||a-b);
+ oralTheme.innerHTML=order.map(i=>'<option value="'+i+'">'+esc(library.scenarios[i].topic)+' — '+(counts[i]?'Practised ('+counts[i]+' attempts)':'Not yet tried')+'</option>').join('');
+ oralTheme.value=current;
+ const sc=oralSelected();if(!sc)return;
+ const qv=oralQuestion.value;
+ oralQuestion.innerHTML=sc.questions.map((q,i)=>{const arr=questionAttempts(sc.topic,'Q'+(i+1));return '<option value="'+i+'">Q'+(i+1)+' — '+(arr.some(a=>a.status==='marked')?'AI marked ('+arr.length+' attempts)':arr.length?'Saved, not marked':'Not attempted')+' — '+esc(q.question)+'</option>'}).join('');
+ oralQuestion.value=qv;if(oralQuestion.selectedIndex<0)oralQuestion.selectedIndex=0;
+ const arr=questionAttempts(sc.topic,'Q'+(Number(oralQuestion.value)+1));
+ $('questionProgress').textContent=arr.length?arr.length+' previous attempt(s); '+arr.filter(a=>a.status==='marked').length+' AI marked.':'Not attempted yet.';
+ $('questionPrevious').innerHTML=arr.length?'<details><summary>View all previous answers and AI feedback</summary>'+arr.map(attemptHtml).join('')+'</details><button id="retryQuestion" type="button">Retry this question (new blank answer)</button>':'';
+ const retry=$('retryQuestion');if(retry)retry.onclick=()=>{$('oralAnswer').value='';oralDrafts['oral-'+oralTheme.value+'-'+oralQuestion.value]='';$('oralMarkResult').innerHTML='';$('oralStatus').textContent='Fresh retry ready. Earlier attempts remain saved.'};
+}
+$('untriedFirst').onchange=()=>{oralRefreshIndicators();oralRenderQuestion()};
+function oralSelected(){return library.scenarios[Number(oralTheme.value)]}
+function oralRenderQuestion(){
+ const sc=oralSelected(),q=sc.questions[Number(oralQuestion.value)];
+ $('oralPrompt').textContent=q.question;
+ $('oralIdeas').innerHTML=(q.ideas||[]).map((x,i)=>'<p><b>Idea '+(i+1)+': '+oralEsc(x.idea)+'</b><br>'+oralEsc(x.explanation)+'<br><i>'+oralEsc(x.example)+'</i></p>').join('');
+ $('oralVocab').textContent=Array.isArray(sc.vocab)?sc.vocab.map(v=>typeof v==='string'?v:JSON.stringify(v)).join(' · '):JSON.stringify(sc.vocab||'');
+ $('oralModel').textContent=q.model?Object.values(q.model).filter(x=>typeof x==='string').join(' '):'No model answer for this question.';
+ const key='oral-'+oralTheme.value+'-'+oralQuestion.value;
+ $('oralAnswer').value=oralDrafts[key]||'';
+ $('oralStatus').textContent='';
+ oralRefreshIndicators();
+}
+const oralDrafts={};
+function oralRenderTheme(){const sc=oralSelected();$('oralScene').textContent=sc.scene||'';$('oralPhoto').src=library.photos[String(sc.photo)]||'';oralQuestion.innerHTML=sc.questions.map((q,i)=>'<option value="'+i+'">'+oralEsc(q.question)+'</option>').join('');oralRenderQuestion()}
+oralTheme.innerHTML=library.scenarios.map((s,i)=>'<option value="'+i+'">'+oralEsc(s.topic)+'</option>').join('');
+oralTheme.onchange=oralRenderTheme;oralQuestion.onchange=oralRenderQuestion;
+$('oralAnswer').oninput=()=>{oralDrafts['oral-'+oralTheme.value+'-'+oralQuestion.value]=$('oralAnswer').value};
+oralRenderTheme();
+$('oralSave').onclick=async()=>{const b=$('oralSave');b.disabled=true;try{
+ const sc=oralSelected(),q=Number(oralQuestion.value),answer=$('oralAnswer').value.trim();if(!answer)throw Error('Write an answer before saving.');
+ const result=await studentRequest('save-attempt','POST',{theme_id:sc.topic,question_id:'Q'+(q+1),stimulus_id:'photo-'+sc.photo,answer_text:answer,status:'draft',content_version:'original-practice-library-v1'});
+ $('oralStatus').textContent='Saved to cloud successfully. Parent Review can now see this answer.';
+ await oralLoadHistory();
+ }catch(e){$('oralStatus').textContent='Not saved: '+e.message}finally{b.disabled=false}};
+async function oralLoadHistory(){try{const d=await studentRequest('student-history');oralAttempts=d.attempts||[];oralRefreshIndicators();$('oralRecent').innerHTML='<h4>Recent cloud answers</h4>'+oralAttempts.slice(0,15).map(attemptHtml).join('');}catch(e){$('oralRecent').textContent=e.message}}
+$('oralHistory').onclick=oralLoadHistory;
+// AI marking happens on the trusted Netlify Function, never in the browser.
+function renderMarking(original,corrected){
+ const before=String(original).trim().split(/\s+/),after=String(corrected).trim().split(/\s+/);
+ // Lightweight word-level comparison; changed words are coloured, not an exact editorial diff.
+ if(before.length*after.length>250000)return '<p><b>Original</b></p><p>'+esc(original)+'</p><p><b>Suggested improvement</b></p><p>'+esc(corrected)+'</p>';
+ const m=before.length,n=after.length,dp=Array.from({length:m+1},()=>new Uint16Array(n+1));
+ for(let i=m-1;i>=0;i--)for(let j=n-1;j>=0;j--)dp[i][j]=before[i]===after[j]?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+ let i=0,j=0,a=[],b=[];while(i<m||j<n){if(i<m&&j<n&&before[i]===after[j]){a.push(esc(before[i]));b.push(esc(after[j]));i++;j++;}else if(i<m&&(j===n||dp[i+1][j]>=dp[i][j+1])){a.push('<del style="color:#b42318">'+esc(before[i++])+'</del>');}else{b.push('<ins style="color:#137547">'+esc(after[j++])+'</ins>');}}
+ return '<p><b>Original (red = words to revise)</b></p><p>'+a.join(' ')+'</p><p><b>Suggested improvement (green = new wording)</b></p><p>'+b.join(' ')+'</p>';
+}
+$('oralMark').onclick=async()=>{
+ const btn=$('oralMark');btn.disabled=true;$('oralMarkStatus').textContent='Sending answer for AI marking…';$('oralMarkResult').innerHTML='';
+ try{const sc=oralSelected(),q=Number(oralQuestion.value),answer=$('oralAnswer').value.trim();
+ if(!answer){$('oralMarkStatus').textContent='You haven’t answered this question yet. Please refer to the Model Answer for guidance (open Vocabulary and model answer above).';$('oralMarkResult').innerHTML='';return;}
+ const d=await studentRequest('mark-answer','POST',{theme_id:sc.topic,question_id:'Q'+(q+1),stimulus_id:'photo-'+sc.photo,question_text:sc.questions[q].question,answer_text:answer,bright_ideas:sc.questions[q].ideas||[],scene_description:sc.scene||'',photo_data:q===0?(library.photos[String(sc.photo)]||''):null});
+ const f=d.feedback;
+ $('oralMarkStatus').textContent='Marked and saved to cloud. '+(d.remaining_today===null?'AI marking: unlimited (API charges apply).':'Remaining today: '+d.remaining_today);
+ $('oralMarkResult').innerHTML='<h4>Practice score: '+esc(d.score)+'/100</h4><p><small>'+esc(f.rubric)+'</small></p><p><b>Strengths:</b> '+(f.strengths||[]).map(esc).join(' · ')+'</p><p><b>To improve:</b> '+(f.improvements||[]).map(esc).join(' · ')+'</p><p>'+esc(f.explanation)+'</p>'+renderMarking(answer,d.corrected_text);
+ await oralLoadHistory();
+ }catch(e){ $('oralMarkStatus').textContent=e.message;}finally{btn.disabled=false;}
+};
+
+
+void initialize();
+const params=new URLSearchParams(location.search);$('redeemPanel').hidden=!params.has('invite');
+
+async function parentToken(){const {data:{session}}=await client.auth.getSession();if(!session)throw Error('Please sign in as parent first');return session.access_token}
+async function parentRequest(path,method='GET',body){const token=await parentToken();const res=await fetch('/.netlify/functions/'+path,{method,headers:{authorization:'Bearer '+token,...(body?{'content-type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});const data=await res.json();if(!res.ok)throw Error(data.error||'Request failed');return data}
+$('createStudent').onclick=async()=>{const btn=$('createStudent');btn.disabled=true;$('createStatus').textContent='Creating student…';try{const data=await parentRequest('create-student','POST',{display_name:$('studentName').value,username:$('studentUsername').value,password:$('studentPassword').value});$('createStatus').textContent='Created '+data.student.display_name;$('studentPassword').value='';$('loadFamily').click()}catch(e){$('createStatus').textContent=e.message}finally{btn.disabled=false}};
+$('resetStudentBtn').onclick=async()=>{const btn=$('resetStudentBtn');if(!confirm('Reset password for the selected student?'))return;btn.disabled=true;try{const d=await parentRequest('reset-student-password','POST',{student_id:$('resetStudent').value,password:$('resetPassword').value});$('resetStatus').textContent=d.message;$('resetPassword').value='';}catch(e){$('resetStatus').textContent=e.message}finally{btn.disabled=false}};
+$('importHistoryBtn').onclick=async()=>{const btn=$('importHistoryBtn');const file=$('importFile').files[0];if(!file){$('importStatus').textContent='Choose the JSON backup first.';return;}if(file.size>550000){$('importStatus').textContent='Backup too large; contact support before importing.';return;}if(!confirm('Import backup records into the selected student account?'))return;btn.disabled=true;try{const parsed=JSON.parse(await file.text());const history=Array.isArray(parsed)?parsed:parsed.history;if(!Array.isArray(history))throw Error('Not a recognised history backup');const d=await parentRequest('import-history','POST',{student_id:$('importStudent').value,history});$('importStatus').textContent=`Imported ${d.imported}, skipped ${d.skipped}. Keep your backup file.`;$('loadFamily').click();}catch(e){$('importStatus').textContent='Import failed: '+e.message}finally{btn.disabled=false}};
+$('loadFamily').onclick=async()=>{try{$('familyStatus').textContent='Loading…';const data=await parentRequest('family-overview');for(const id of ['resetStudent','importStudent','aiSettingStudent']){$(id).innerHTML=data.students.map(st=>'<option value="'+esc(st.id)+'">'+esc(st.display_name)+' ('+esc(st.username)+')</option>').join('');} $('familyStatus').textContent=data.students.length+' student(s); '+data.attempts.length+' recent practice record(s).';$('familyResults').innerHTML=data.students.map(s=>{const attempts=data.attempts.filter(a=>a.student_id===s.id);const scores=attempts.filter(a=>typeof a.score==='number'&&!a.feedback?.legacy_import);const avg=scores.length?(scores.reduce((n,a)=>n+a.score,0)/scores.length).toFixed(1):'Not marked yet';const themes=library.scenarios.map(sc=>({topic:sc.topic,items:attempts.filter(a=>a.theme_id===sc.topic)}));const done=themes.filter(t=>t.items.length).length;return '<section><h4>'+esc(s.display_name)+' ('+esc(s.username)+')</h4><p><b>Themes attempted: '+done+'/'+themes.length+' · Not attempted: '+(themes.length-done)+'</b> · Records: '+attempts.length+' · Average marked score: '+avg+'</p><details><summary>Show all theme and question progress</summary>'+themes.map(t=>'<details><summary>'+esc(t.topic)+' — '+(t.items.length?'Practised':'Not attempted')+'</summary>'+library.scenarios.find(sc=>sc.topic===t.topic).questions.map((q,i)=>{const arr=t.items.filter(a=>a.question_id==='Q'+(i+1));return '<p>Q'+(i+1)+': '+esc(q.question)+' — '+(arr.some(a=>a.status==='marked')?'AI marked':arr.length?'Saved, not marked':'Not attempted')+' ('+arr.length+' attempts)</p>'}).join('')+'</details>').join('')+'</details><h4>All saved answers and AI model answers</h4>'+attempts.map(attemptHtml).join('')+'</section>'}).join('')||'No students yet.';}catch(e){$('familyStatus').textContent=e.message}};
+$('saveAiSetting').onclick=async()=>{const btn=$('saveAiSetting');btn.disabled=true;try{const value=$('aiSettingLimit').value;await parentRequest('set-ai-limit','POST',{student_id:$('aiSettingStudent').value,daily_limit:value==='unlimited'?null:Number(value)});$('aiSettingStatus').textContent='AI allowance saved.'}catch(e){$('aiSettingStatus').textContent=e.message}finally{btn.disabled=false}};
+$('studentLogin').onclick=async()=>{try{$('studentStatus').textContent='Signing in…';const res=await fetch('/.netlify/functions/student-login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username:$('studentLoginName').value,password:$('studentLoginPassword').value})});const data=await res.json();if(!res.ok)throw Error(data.error||'Login failed');studentSession=data.session;$('studentStatus').textContent='Signed in as '+data.student.display_name;$('studentPractice').hidden=false;$('studentLoginPassword').value='';void oralLoadHistory();}catch(e){$('studentStatus').textContent=e.message}};
+// Phase 2A: browser speech recognition only; no audio is stored or sent to our backend.
+let oralRecognizer=null;
+let oralMicBase='';
+let oralMicFinal='';
+const SpeechAPI=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SpeechAPI){$('oralMicStart').disabled=true;$('oralMicStatus').textContent='Speech recognition unavailable in this browser. Try Chrome or Edge, or type your answer.';}
+$('oralMicStart').onclick=()=>{
+ if(!studentSession){$('oralMicStatus').textContent='Sign in as a student first.';return;}
+ if(!SpeechAPI)return;
+ if(oralRecognizer){$('oralMicStatus').textContent='Already listening';return;}
+ oralMicBase=$('oralAnswer').value.trim();oralMicFinal='';
+ const rec=new SpeechAPI();oralRecognizer=rec;
+ rec.lang='en-SG';rec.continuous=true;rec.interimResults=true;
+ $('oralMicStart').disabled=true;$('oralMicStop').disabled=false;
+ $('oralMicStatus').textContent='Listening… Speak clearly.';
+ rec.onresult=e=>{
+  let interim='';
+  for(let i=e.resultIndex;i<e.results.length;i++){
+   const part=e.results[i][0].transcript;
+   if(e.results[i].isFinal)oralMicFinal+=(oralMicFinal?' ':'')+part.trim();
+   else interim+=(interim?' ':'')+part.trim();
+  }
+  $('oralAnswer').value=[oralMicBase,oralMicFinal,interim].filter(Boolean).join(' ').trim();
+ };
+ rec.onerror=e=>{$('oralMicStatus').textContent='Microphone error: '+e.error+'. You can type instead.';};
+ rec.onend=()=>{if(oralRecognizer===rec){oralRecognizer=null;$('oralMicStart').disabled=false;$('oralMicStop').disabled=true;if($('oralMicStatus').textContent.startsWith('Listening'))$('oralMicStatus').textContent='Stopped. Review the transcript before saving.';}};
+ try{rec.start();}catch(e){oralRecognizer=null;$('oralMicStart').disabled=false;$('oralMicStop').disabled=true;$('oralMicStatus').textContent='Could not start microphone: '+e.message;}
+};
+$('oralMicStop').onclick=()=>{if(oralRecognizer)oralRecognizer.stop();};
+$('studentLogout').onclick=()=>{studentSession=null;$('studentPractice').hidden=true;$('studentStatus').textContent='Signed out'};
+async function studentRequest(path,method='GET',body){if(!studentSession)throw Error('Student sign-in required');const res=await fetch('/.netlify/functions/'+path,{method,headers:{authorization:'Bearer '+studentSession.access_token,...(body?{'content-type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});const data=await res.json();if(!res.ok)throw Error(data.error||'Request failed');return data}
+$('saveAttempt').onclick=async()=>{try{const data=await studentRequest('save-attempt','POST',{theme_id:$('themeId').value,question_id:$('questionId').value,answer_text:$('answerText').value,status:'draft',content_version:'family-test-v1'});$('attemptStatus').textContent='Saved draft: '+data.attempt.id}catch(e){$('attemptStatus').textContent=e.message}};
+$('loadStudent').onclick=async()=>{try{const data=await studentRequest('student-history');$('studentResults').innerHTML='<h4>'+esc(data.student.display_name)+'</h4>'+data.attempts.map(a=>'<p>'+esc(a.theme_id)+' / '+esc(a.question_id)+' · '+esc(a.status)+' · '+esc(a.answer_text)+'</p>').join('')}catch(e){$('attemptStatus').textContent=e.message}};
+</script></html>

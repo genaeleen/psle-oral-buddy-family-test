@@ -1,0 +1,11 @@
+PSLE Oral Buddy: Original Experience + Family Cloud
+
+Upload the CONTENTS of this folder to the existing Family Edition GitHub repository only. Do NOT upload to the original site.
+
+The original 27-theme interface, embedded photos, side hints, guided answer builder, reading aloud and navigation are preserved in public/index.html.
+
+Student login and cloud AI marking are added at the top. Parent administration and imported cloud history are available through /family-admin.html.
+
+This is a static/code-checked integration candidate. Live Supabase/OpenAI/browser flows have NOT been verified. Keep the original site and family history backup untouched.
+
+No new SQL or Netlify environment variables are required.
