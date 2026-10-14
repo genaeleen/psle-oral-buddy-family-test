@@ -32,9 +32,17 @@ function startDictation(k){
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SpeechRecognition){alert('Speech-to-text is not available in this browser. Try Chrome or Edge on a secure (HTTPS) website. You can still type or record audio.');return}
   stopDictation();const area=document.querySelector('[data-field="'+k+'"]');if(!area)return;
-  dictationField=k;const r=new SpeechRecognition();dictation=r;r.lang='en-SG';r.continuous=true;r.interimResults=true;r.maxAlternatives=1;
-  const base=area.value.trim();let finalText='';
-  r.onresult=e=>{let interim='';for(let i=0;i<e.results.length;i++){let result=e.results[i];if(result.isFinal)finalText+=result[0].transcript+' ';else interim+=result[0].transcript}area.value=[base,finalText.trim(),interim.trim()].filter(Boolean).join(' ');saveDraft();const status=document.querySelector('#dictationStatus');if(status)status.textContent='🔴 Listening — please check the words as they appear.'};
+  dictationField=k;const r=new SpeechRecognition();dictation=r;r.lang='en-SG';r.continuous=true;r.interimResults=false;r.maxAlternatives=1;
+  const base=area.value.trim();const segments=new Map();
+  r.onresult=e=>{
+    // Chrome may resend the full result list. Each final segment is stored by its stable index.
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const result=e.results[i];if(result.isFinal)segments.set(i,result[0].transcript.trim());
+    }
+    const spoken=[...segments.entries()].sort((a,b)=>a[0]-b[0]).map(x=>x[1]).filter(Boolean).join(' ');
+    area.value=[base,spoken].filter(Boolean).join(' ');saveDraft();
+    const status=document.querySelector('#dictationStatus');if(status)status.textContent='🔴 Listening — confirmed words appear in the answer.';
+  };
   r.onerror=e=>{const status=document.querySelector('#dictationStatus');if(status)status.textContent='Dictation: '+e.error+'. Check microphone permission and browser support.'};
   r.onend=()=>{if(dictation===r)dictation=null;const status=document.querySelector('#dictationStatus');if(status)status.textContent='Dictation stopped. You can edit the text above.'};
   try{r.start();let status=document.querySelector('#dictationStatus');if(!status){status=document.createElement('p');status.id='dictationStatus';status.className='hint';area.parentElement.append(status)}status.textContent='🔴 Listening for '+(labels[keys.indexOf(k)]||'answer')+'… Speak clearly; press Stop dictation when finished.'}catch(e){alert('Unable to start dictation: '+e.message)}
@@ -90,16 +98,29 @@ render=function(){oldRender();const v=document.getElementById('view');
  if(tab==='student-progress'&&familyStudent){const attempts=familyAttempts,started=new Set(attempts.map(a=>a.theme_id)).size;v.insertAdjacentHTML('afterbegin','<section class="card"><h3>☁️ Cloud practice progress</h3><p><b>'+started+' / '+DB.scenarios.length+'</b> themes attempted · <b>'+attempts.filter(a=>a.status==='marked').length+'</b> AI-marked attempts</p><details><summary>View all saved cloud answers and corrections</summary>'+attempts.map(cloudAttemptHtml).join('')+'</details></section>');}
 
  if(familyStudent&&(tab==='topics'||tab==='practice')){
-  const statusFor=(theme,qid)=>{
-    const matches=familyAttempts.filter(a=>a.theme_id===theme&&a.question_id===qid);
+  const norm=v=>String(v??'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]/g,'');
+  const matchesTheme=(a,theme,index)=>{
+    const stored=norm(a.theme_id),title=norm(theme);
+    return stored===title || (Number.isInteger(index)&&[''+(index+1),''+index,'theme'+(index+1),'topic'+(index+1)].includes(stored));
+  };
+  const matchesQuestion=(a,qid)=>{
+    const n=Number(String(qid).replace(/\D/g,''));
+    const stored=norm(a.question_id);
+    return ['q'+n,'question'+n,String(n)].includes(stored);
+  };
+  const statusFor=(theme,qid,index)=>{
+    const matches=familyAttempts.filter(a=>matchesTheme(a,theme,index)&&matchesQuestion(a,qid));
     if(!matches.length)return {label:'Not attempted',cls:'not-tried'};
     if(matches.some(a=>a.status==='marked'||a.score!=null))return {label:'AI marked',cls:'marked'};
     return {label:'Saved',cls:'saved'};
   };
   if(tab==='topics'){
+    const refresh=document.createElement('button');refresh.type='button';refresh.className='cloud-refresh-btn';refresh.textContent='↻ Refresh my practice status';
+    refresh.onclick=async()=>{refresh.disabled=true;refresh.textContent='Refreshing…';await cloudRefresh();render()};
+    v.querySelector('section.card')?.appendChild(refresh);
     v.querySelectorAll('button.tile').forEach((tile,i)=>{
       const theme=DB.scenarios[i];if(!theme)return;
-      const qs=theme.questions.map((_,j)=>statusFor(theme.topic,'Q'+(j+1)));
+      const qs=theme.questions.map((_,j)=>statusFor(theme.topic,'Q'+(j+1),i));
       const done=qs.filter(x=>x.cls!=='not-tried').length;
       const badge=document.createElement('span');badge.className='cloud-progress-badge '+(done?'started':'not-tried');
       badge.textContent=done?done+' of '+qs.length+' questions attempted':'Not attempted';tile.appendChild(badge);
@@ -108,7 +129,7 @@ render=function(){oldRender();const v=document.getElementById('view');
   if(tab==='practice'){
     const theme=item();v.querySelectorAll('.questions .qgroup button').forEach(button=>{
       const m=button.getAttribute('onclick')?.match(/chooseQ\((\d+)\)/);if(!m)return;
-      const st=statusFor(theme.topic,'Q'+(Number(m[1])+1));
+      const st=statusFor(theme.topic,'Q'+(Number(m[1])+1),idx);
       const badge=document.createElement('span');badge.className='cloud-progress-badge '+st.cls;badge.textContent=st.label;button.appendChild(badge);
     });
   }
