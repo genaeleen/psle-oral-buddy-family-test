@@ -1,0 +1,14 @@
+Upload only the public/ and netlify/ folders into a preview branch of the CURRENT connected repository.
+Do not replace the whole repository with this ZIP.
+
+public/theme1-pilot/index.html
+public/theme1-pilot/app.js
+public/theme1-pilot/content.json
+public/theme1-pilot/assets/mrt.jpg
+public/theme1-pilot/assets/library.png
+public/theme1-pilot/assets/hawker.png
+netlify/functions/theme1-pilot-ai.mjs
+netlify/functions/theme1-pilot-mark.mjs
+
+Read START-HERE.md for preview, origins, testing, publishing and rollback.
+AI-EXPANSION-PLAN.md distinguishes included generation buttons from the future parent image/question workflow.
