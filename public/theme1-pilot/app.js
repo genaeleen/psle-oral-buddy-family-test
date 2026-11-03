@@ -20,7 +20,7 @@ async function request(endpoint,body,secure=true){
  if(secure&&auth.session.expires_at&&auth.session.expires_at*1000<Date.now()+60000){
   if(!refreshSessionPromise){
    const old=auth;
-   const pending=request('student-session',{refresh_token:old.session.refresh_token},false).then(d=>{
+   const pending=request('theme1-pilot-session',{refresh_token:old.session.refresh_token},false).then(d=>{
     if(authEpoch===epoch&&auth===old){auth={student:d.student,session:d.session};updateAuth();}
    }).finally(()=>{if(refreshSessionPromise===pending)refreshSessionPromise=null;});
    refreshSessionPromise=pending;
@@ -97,4 +97,4 @@ $('login-form').onsubmit=async e=>{
 };
 $('signout').onclick=()=>{saveLocal();stopDictation();authEpoch++;refreshSessionPromise=null;auth=null;viewVersion++;jobs=[];legacy=[];drafts=new Map();content.questions=content.questions.filter(q=>!q.id.startsWith('ai-'));current=0;setBusy(false);updateAuth();render();notice('Signed out on this browser.');};
 window.addEventListener('pagehide',saveLocal);
-(async()=>{try{const r=await fetch('content.json');if(!r.ok)throw Error('Theme 1 content could not load.');content=await r.json();for(const w of content.vocabulary){const span=document.createElement('span');span.className='vocab';span.textContent=w;$('vocabulary').append(span);}render();let stored;try{stored=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');}catch{}if(stored?.session?.refresh_token){const epoch=authEpoch;const d=await request('student-session',{refresh_token:stored.session.refresh_token},false);if(authEpoch!==epoch)return;saveLocal();authEpoch++;auth={student:d.student,session:d.session};drafts=new Map();updateAuth();render();await refresh();}}catch(e){notice(e.message,true);}})();
+(async()=>{try{const r=await fetch('content.json');if(!r.ok)throw Error('Theme 1 content could not load.');content=await r.json();for(const w of content.vocabulary){const span=document.createElement('span');span.className='vocab';span.textContent=w;$('vocabulary').append(span);}render();let stored;try{stored=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');}catch{}if(stored?.session?.refresh_token){const epoch=authEpoch;const d=await request('theme1-pilot-session',{refresh_token:stored.session.refresh_token},false);if(authEpoch!==epoch)return;saveLocal();authEpoch++;auth={student:d.student,session:d.session};drafts=new Map();updateAuth();render();await refresh();}}catch(e){notice(e.message,true);}})();
